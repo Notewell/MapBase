@@ -106,6 +106,8 @@ private:
 	static float m_flVisibleBBoxMinHeight;
 
 	ITexture* m_pVideoMatTexture;
+
+	friend class C_EnvProjectedVideo;
 };
 
 

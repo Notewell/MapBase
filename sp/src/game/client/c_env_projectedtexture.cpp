@@ -146,7 +146,7 @@ void C_EnvProjectedTexture::SetVideoMaterial( IMaterial* pVidMat )
 			if (tex)
 			{
 				m_pVideoMatTexture = tex;
-				m_LightHandle = CLIENTSHADOW_INVALID_HANDLE;
+				ShutDownLightHandle();
 			}
 		}
 	}

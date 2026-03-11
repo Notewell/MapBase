@@ -241,12 +241,24 @@ void CEnvProjectedVideo::DestroyVideo()
 		m_pVideoRT.Shutdown();
 		m_pVideoRTMaterial.Shutdown();
 		BaseClass::SetVideoMaterial(NULL);
+		ShutDownLightHandle();
 	}
 
 }
 
 void CEnvProjectedVideo::ClientThink()
 {
+
+	if (!m_bState)
+	{
+		if (m_pVideoMaterial)
+		{
+			DestroyVideo();
+		}
+		SetNextClientThink(CLIENT_THINK_ALWAYS);
+		return;
+	}
+
 	if (!m_pVideoMaterial)
 	{
 		CreateVideo();
