@@ -259,6 +259,16 @@ void CEnvProjectedVideo::ClientThink()
 
 	RenderVideoToTexture();
 
+	float curTime = m_pVideoMaterial->GetCurrentVideoTime();
+	//float duration = m_pVideoMaterial->GetVideoDuration();
+	//ConMsg( "Time: %f / %f\n", curTime, duration );
+
+	const float EPS = 1e-4f;
+	if (m_flLastVideoTime < 0.0f || fabsf(curTime - m_flLastVideoTime) > EPS)
+	{
+		m_flLastVideoTime = curTime;
+	}
+
 	// Think at ~30fps instead of every engine tick to reduce load
 	SetNextClientThink(gpGlobals->curtime + 0.03f);
 }
