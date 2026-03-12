@@ -166,7 +166,7 @@ void CEnvProjectedVideo::CreateVideo()
 	if (!g_pVideo)
 		return;
 
-	if (!m_szVideoFile)
+	if (!m_szVideoFile[0])
 		return;
 
 	// If we already have a material, destroy & recreate it
