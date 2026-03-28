@@ -429,7 +429,9 @@ private:
 
 	COutputEvent				m_OnShotFired;
 
+#ifdef MAPBASE
 	CBaseEntity* m_FakeRifle;
+#endif
 	
 	DEFINE_CUSTOM_AI;
 
@@ -779,10 +781,7 @@ void CProtoSniper::LaserOn( const Vector &vecTarget, const Vector &vecDeviance )
 	// The beam is backwards, sortof. The endpoint is the sniper. This is
 	// so that the beam can be tapered to very thin where it emits from the sniper.
 #ifndef MAPBASE
-	if (HasSpawnFlags(SF_SNIPER_HIDDEN))
-	{
-		m_pBeam->PointsInit(vecInitialAim, GetBulletOrigin());
-	}
+	m_pBeam->PointsInit(vecInitialAim, GetBulletOrigin());
 #endif
 #ifdef MAPBASE
 	if (HasSpawnFlags(SF_SNIPER_HIDDEN))
@@ -1569,9 +1568,9 @@ int CProtoSniper::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 //-----------------------------------------------------------------------------
 void CProtoSniper::Event_Killed( const CTakeDamageInfo &info )
 {
-#ifdef MAPBASE
 	if( !(m_spawnflags & SF_SNIPER_NOCORPSE) )
 	{
+#ifdef MAPBASE
 		// If we're not hidden, spawn a physics version of our rifle
 		if (!HasSpawnFlags(SF_SNIPER_HIDDEN))
 		{
@@ -1615,8 +1614,8 @@ void CProtoSniper::Event_Killed( const CTakeDamageInfo &info )
 					pGunProp->ApplyLocalAngularVelocityImpulse(AngularImpulse(0, random->RandomFloat(0, 100), 0));
 				}
 			}
-		}
 #endif
+		}
 #ifdef MAPBASE
 		Vector vecForce;
 
@@ -2216,6 +2215,7 @@ Activity CProtoSniper::NPC_TranslateActivity( Activity eNewActivity )
 	{
 		if (eNewActivity == ACT_IDLE)
 		{
+			// Now uses aiming animations for snipers that don't have Hidden spawnflag
 			eNewActivity = ACT_IDLE_ANGRY_SMG1; // ACT_IDLE_SMG1
 		}
 		else if (eNewActivity == ACT_WALK)
