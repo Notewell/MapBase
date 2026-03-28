@@ -1159,7 +1159,7 @@ void CProtoSniper::Spawn( void )
 #ifdef MAPBASE
 	else
 	{
-		m_FakeRifle = CreateEntityByName("prop_dynamic_override");
+		m_FakeRifle = CreateEntityByName("prop_dynamic_ornament");
 		if (m_FakeRifle)
 		{
 			bool shouldUseAimingVariables = false;
@@ -1189,7 +1189,6 @@ void CProtoSniper::Spawn( void )
 			}
 			m_FakeRifle->SetLocalOrigin(offset);
 			m_FakeRifle->SetModel(npc_sniper_riflemodel.GetString());
-			m_FakeRifle->SetCollisionGroup(COLLISION_GROUP_WEAPON);
 			m_FakeRifle->SetOwnerEntity(this);
 			m_FakeRifle->Spawn();
 			m_FakeRifle->Activate();
