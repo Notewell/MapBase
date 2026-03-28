@@ -58,23 +58,25 @@ ConVar showsniperdist("showsniperdist", "0" );
 ConVar sniperspeak( "sniperspeak", "0" );
 ConVar sniper_xbox_delay( "sniper_xbox_delay", "1" );
 
+#ifdef MAPBASE
 // ConVars for configuring Unhidden Snipers
-ConVar sniper_riflemodel("sniper_riflemodel", "models/weapons/w_irifle.mdl"); //models/weapons/w_snip_sg550.mdl
-ConVar sniperrifle_offset_x("sniperrifle_offset_x", "10.5");
-ConVar sniperrifle_offset_y("sniperrifle_offset_y", "-2.5");
-ConVar sniperrifle_offset_z("sniperrifle_offset_z", "45.0");
-ConVar sniperrifle_despawn_t("sniperrifle_despawn_t", "5");
-ConVar sniperrifle_use_attachment("sniperrifle_use_attachment", "1");
-ConVar sniperrifle_attachment_point("sniperrifle_attachment_point", "lefthand");
+ConVar npc_sniper_riflemodel("npc_sniper_riflemodel", "models/weapons/w_irifle.mdl");
+ConVar npc_sniper_rifle_offset_x("npc_sniper_rifle_offset_x", "10.5");
+ConVar npc_sniper_rifle_offset_y("npc_sniper_rifle_offset_y", "-2.5");
+ConVar npc_sniper_rifle_offset_z("npc_sniper_rifle_offset_z", "45.0");
+ConVar npc_sniper_rifle_despawn_t("npc_sniper_rifle_despawn_t", "5");
+ConVar npc_sniper_rifle_use_attachment("npc_sniper_rifle_use_attachment", "1");
+ConVar npc_sniper_rifle_attachment_point("npc_sniper_rifle_attachment_point", "lefthand");
 
-ConVar sniperrifle_offset_x_attachment("sniperrifle_offset_x_attachment", "-3.5");
-ConVar sniperrifle_offset_y_attachment("sniperrifle_offset_y_attachment", "-7.5");
-ConVar sniperrifle_offset_z_attachment("sniperrifle_offset_z_attachment", "0");
+ConVar npc_sniper_rifle_offset_x_attachment("npc_sniper_rifle_offset_x_attachment", "-3.5");
+ConVar npc_sniper_rifle_offset_y_attachment("npc_sniper_rifle_offset_y_attachment", "-7.5");
+ConVar npc_sniper_rifle_offset_z_attachment("npc_sniper_rifle_offset_z_attachment", "0");
 
-ConVar sv_npc_sniper_use_aiming_anims("sv_npc_sniper_use_aiming_anims", "1");
-ConVar sv_npc_sniper_should_rotate_body("sv_npc_sniper_should_rotate_body", "1");
+ConVar npc_sniper_use_aiming_anims("npc_sniper_use_aiming_anims", "1");
+ConVar npc_sniper_should_rotate_body("npc_sniper_should_rotate_body", "1");
 
 ConVar sk_npc_sniper_easy_delay("sk_npc_sniper_easy_delay", "5.0");
+#endif
 
 // Moved to HL2_SharedGameRules because these are referenced by shared AmmoDef functions
 extern ConVar sk_dmg_sniper_penetrate_plr;
@@ -89,6 +91,7 @@ extern ConVar sk_dmg_sniper_penetrate_npc;
 #define SF_SNIPER_NOSWEEP		(1 << 21) ///< This sniper doesn't sweep to the target or use decoys.
 #ifdef MAPBASE
 #define SF_SNIPER_DIE_ON_FIRE	(1 << 22) // This sniper dies on fire.
+#define SF_SNIPER_DELAY_FIRE_ON_EASY (1 << 23) // This sniper will delay fire by 5 seconds on Easy.
 #endif
 
 // If the last time I fired at someone was between 0 and this many seconds, draw
@@ -775,6 +778,13 @@ void CProtoSniper::LaserOn( const Vector &vecTarget, const Vector &vecDeviance )
 	
 	// The beam is backwards, sortof. The endpoint is the sniper. This is
 	// so that the beam can be tapered to very thin where it emits from the sniper.
+#ifndef MAPBASE
+	if (HasSpawnFlags(SF_SNIPER_HIDDEN))
+	{
+		m_pBeam->PointsInit(vecInitialAim, GetBulletOrigin());
+	}
+#endif
+#ifdef MAPBASE
 	if (HasSpawnFlags(SF_SNIPER_HIDDEN))
 	{
 		m_pBeam->PointsInit(vecInitialAim, GetBulletOrigin());
@@ -795,6 +805,7 @@ void CProtoSniper::LaserOn( const Vector &vecTarget, const Vector &vecDeviance )
 			m_pBeam->PointsInit(vecInitialAim, GetAbsOrigin());
 		}
 	}
+#endif
 	m_pBeam->SetBrightness( 255 );
 	m_pBeam->SetNoise( 0 );
 	m_pBeam->SetWidth( 1.0f );
@@ -1146,6 +1157,7 @@ void CProtoSniper::Spawn( void )
 		AddEffects( EF_NODRAW );
 		AddSolidFlags( FSOLID_NOT_SOLID );
 	}
+#ifdef MAPBASE
 	else
 	{
 		m_FakeRifle = CreateEntityByName("prop_dynamic_override");
@@ -1153,31 +1165,31 @@ void CProtoSniper::Spawn( void )
 		{
 			bool shouldUseAimingVariables = false;
 			Vector offset;
-			if (sniperrifle_use_attachment.GetBool())
+			if (npc_sniper_rifle_use_attachment.GetBool())
 			{
-				int attachment = LookupAttachment(sniperrifle_attachment_point.GetString());
+				int attachment = LookupAttachment(npc_sniper_rifle_attachment_point.GetString());
 				{
 					if (attachment)
 					{
-						offset.Init(sniperrifle_offset_x_attachment.GetFloat(), sniperrifle_offset_y_attachment.GetFloat(), sniperrifle_offset_z_attachment.GetFloat());
+						offset.Init(npc_sniper_rifle_offset_x_attachment.GetFloat(), npc_sniper_rifle_offset_y_attachment.GetFloat(), npc_sniper_rifle_offset_z_attachment.GetFloat());
 						m_FakeRifle->SetParent(this, attachment);
 						shouldUseAimingVariables = true;
 					}
 					else
 					{
 						Warning("Failed to attach to attachment, attachment doesn't exist.\n");
-						offset.Init(sniperrifle_offset_x.GetFloat(), sniperrifle_offset_y.GetFloat(), sniperrifle_offset_z.GetFloat());
+						offset.Init(npc_sniper_rifle_offset_x.GetFloat(), npc_sniper_rifle_offset_y.GetFloat(), npc_sniper_rifle_offset_z.GetFloat());
 						m_FakeRifle->SetParent(this);
 					}
 				}
 			}
 			else
 			{
-				offset.Init(sniperrifle_offset_x.GetFloat(), sniperrifle_offset_y.GetFloat(), sniperrifle_offset_z.GetFloat());
+				offset.Init(npc_sniper_rifle_offset_x.GetFloat(), npc_sniper_rifle_offset_y.GetFloat(), npc_sniper_rifle_offset_z.GetFloat());
 				m_FakeRifle->SetParent(this);
 			}
 			m_FakeRifle->SetLocalOrigin(offset);
-			m_FakeRifle->SetModel(sniper_riflemodel.GetString());
+			m_FakeRifle->SetModel(npc_sniper_riflemodel.GetString());
 			m_FakeRifle->SetCollisionGroup(COLLISION_GROUP_WEAPON);
 			m_FakeRifle->SetOwnerEntity(this);
 			m_FakeRifle->Spawn();
@@ -1189,13 +1201,14 @@ void CProtoSniper::Spawn( void )
 			CapabilitiesAdd(bits_CAP_DOORS_GROUP);
 			CapabilitiesAdd(bits_CAP_FRIENDLY_DMG_IMMUNE);
 			CapabilitiesAdd(bits_CAP_MOVE_GROUND);
-			if (sv_npc_sniper_use_aiming_anims.GetBool())
+			if (npc_sniper_use_aiming_anims.GetBool())
 			{
 				CapabilitiesAdd(bits_CAP_AIM_GUN);
 			}
 			CapabilitiesAdd(bits_CAP_TURN_HEAD);
 		}
 	}
+#endif
 
 	// Point the cursor straight ahead so that the sniper's
 	// first sweep of the laser doesn't look weird.
@@ -1509,11 +1522,13 @@ int CProtoSniper::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 	if ( info.GetDamageType() == DMG_GENERIC && info.GetInflictor() == this )
 		return CAI_BaseNPC::OnTakeDamage_Alive( newInfo );
 
+#ifdef MAPBASE
 	// Allow unhidden snipers to be damaged by normal means
 	if (!HasSpawnFlags(SF_SNIPER_HIDDEN))
 	{
 		return CAI_BaseNPC::OnTakeDamage_Alive(newInfo);
 	}
+#endif
 
 	if( !(info.GetDamageType() & (DMG_BLAST|DMG_BURN) ) )
 	{
@@ -1554,6 +1569,7 @@ int CProtoSniper::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 //-----------------------------------------------------------------------------
 void CProtoSniper::Event_Killed( const CTakeDamageInfo &info )
 {
+#ifdef MAPBASE
 	if( !(m_spawnflags & SF_SNIPER_NOCORPSE) )
 	{
 		// If we're not hidden, spawn a physics version of our rifle
@@ -1571,8 +1587,8 @@ void CProtoSniper::Event_Killed( const CTakeDamageInfo &info )
 			if (pGunProp)
 			{
 				Vector offset;
-				offset.Init(sniperrifle_offset_x.GetFloat(), sniperrifle_offset_y.GetFloat(), sniperrifle_offset_z.GetFloat());
-				pGunProp->SetModel(sniper_riflemodel.GetString());
+				offset.Init(npc_sniper_rifle_offset_x.GetFloat(), npc_sniper_rifle_offset_y.GetFloat(), npc_sniper_rifle_offset_z.GetFloat());
+				pGunProp->SetModel(npc_sniper_riflemodel.GetString());
 				pGunProp->SetAbsOrigin(GetAbsOrigin() + offset);
 				pGunProp->SetAbsAngles(GetAbsAngles());
 				pGunProp->SetCollisionGroup(COLLISION_GROUP_WEAPON);
@@ -1580,7 +1596,7 @@ void CProtoSniper::Event_Killed( const CTakeDamageInfo &info )
 				pGunProp->Activate();
 
 				variant_t variant;
-				variant.SetFloat(sniperrifle_despawn_t.GetFloat());
+				variant.SetFloat(npc_sniper_rifle_despawn_t.GetFloat());
 				pGunProp->AcceptInput("KillWhenNotVisible", NULL, NULL, variant, -1);
 
 				IPhysicsObject* pPhys = pGunProp->VPhysicsGetObject();
@@ -1600,6 +1616,7 @@ void CProtoSniper::Event_Killed( const CTakeDamageInfo &info )
 				}
 			}
 		}
+#endif
 #ifdef MAPBASE
 		Vector vecForce;
 
@@ -2396,11 +2413,13 @@ void CProtoSniper::StartTask( const Task_t *pTask )
 				delay += sniper_xbox_delay.GetFloat();
 #endif
 
+#ifdef MAPBASE
 				// Add a delay on easy difficulty
-				if (g_pGameRules->IsSkillLevel(SKILL_EASY) && !HasSpawnFlags(SF_SNIPER_HIDDEN))
+				if (g_pGameRules->IsSkillLevel(SKILL_EASY) && !HasSpawnFlags(SF_SNIPER_HIDDEN) && HasSpawnFlags(SF_SNIPER_DELAY_FIRE_ON_EASY))
 				{
 					delay += sk_npc_sniper_easy_delay.GetFloat();
 				}
+#endif
 
 				if( gpGlobals->curtime - m_flTimeLastAttackedPlayer <= SNIPER_FASTER_ATTACK_PERIOD )
 				{
@@ -2761,7 +2780,8 @@ void CProtoSniper::PrescheduleThink( void )
 	// If the enemy has been out of sight for a full second, mark him eluded.
 	if( GetEnemy() != NULL )
 	{
-		if (sv_npc_sniper_should_rotate_body.GetBool() && !HasSpawnFlags(SF_SNIPER_HIDDEN))
+#ifdef MAPBASE
+		if (npc_sniper_should_rotate_body.GetBool() && !HasSpawnFlags(SF_SNIPER_HIDDEN))
 		{
 			// Rotate and face the target
 			Vector posToLookAt = GetEnemy()->GetAbsOrigin() - GetAbsOrigin();
@@ -2769,6 +2789,7 @@ void CProtoSniper::PrescheduleThink( void )
 			VectorAngles(posToLookAt, angles);
 			SetAbsAngles(QAngle(0, angles.y, 0));
 		}
+#endif
 		if( gpGlobals->curtime - GetEnemies()->LastTimeSeen( GetEnemy() ) > 30 )
 		{
 			// Stop pestering enemies after 30 seconds of frustration.
